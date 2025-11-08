@@ -1,0 +1,64 @@
+import pandas as pd
+
+# a. Load the dataset
+weather = pd.read_csv("weather.csv")
+
+# b. Display the first 5 rows
+print("First 5 rows:")
+print(weather.head())
+
+# c. Show basic information
+print("\nDataset dimensions:", weather.shape)
+print("\nData types:")
+print(weather.dtypes)
+# Filter for Philadelphia, PA
+philly_weather = weather[weather["Station.City"] == "Philadelphia"].copy()
+
+# Convert date to datetime for later use
+philly_weather["Date.Full"] = pd.to_datetime(philly_weather["Date.Full"])
+
+# Average temperature
+avg_temp = philly_weather["Data.Temperature.Avg Temp"].mean()
+print("\nAverage Temperature (°F):", round(avg_temp, 2))
+
+# Hottest day
+hottest = philly_weather.loc[philly_weather["Data.Temperature.Max Temp"].idxmax()]
+print("\nHottest Day:", hottest["Date.Full"].date(), "Max Temp:", hottest["Data.Temperature.Max Temp"])
+
+# Coldest day
+coldest = philly_weather.loc[philly_weather["Data.Temperature.Min Temp"].idxmin()]
+print("Coldest Day:", coldest["Date.Full"].date(), "Min Temp:", coldest["Data.Temperature.Min Temp"])
+
+# Total precipitation
+total_precip = philly_weather["Data.Precipitation"].sum()
+print("\nTotal Precipitation (in):", round(total_precip, 2))
+
+# Number of rainy days
+rainy_days = (philly_weather["Data.Precipitation"] > 0).sum()
+print("Number of Rainy Days:", rainy_days)
+
+# challenge_accepted
+def summarize_weather_by_station(station_code, df):
+    # Filter for the station
+    station_df = df[df["Station.Code"] == station_code].copy()
+
+    # Convert date and extract month
+    station_df["Date.Full"] = pd.to_datetime(station_df["Date.Full"])
+    station_df["Month"] = station_df["Date.Full"].dt.to_period("M")
+
+    # Group by month and summarize
+    summary = station_df.groupby("Month").agg({
+        "Data.Temperature.Avg Temp": "mean",
+        "Data.Temperature.Max Temp": "max",
+        "Data.Temperature.Min Temp": "min",
+        "Data.Precipitation": "sum",
+        "Data.Wind.Speed": "mean"
+    }).rename(columns={
+        "Data.Temperature.Avg Temp": "Avg Temp (°F)",
+        "Data.Temperature.Max Temp": "Max Temp (°F)",
+        "Data.Temperature.Min Temp": "Min Temp (°F)",
+        "Data.Precipitation": "Total Precipitation (in)",
+        "Data.Wind.Speed": "Avg Wind Speed (mph)"
+    })
+
+    return summary
